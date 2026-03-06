@@ -19,7 +19,7 @@ const dirname = path.dirname(filename)
 
 const plugins: Plugin[] = [payloadCloudPlugin()]
 
-if (process.env.BLOB_READ_WRITE_TOKEN) {
+if (typeof process.env.BLOB_READ_WRITE_TOKEN === 'string') {
   plugins.push(
     vercelBlobStorage({
       collections: {
@@ -54,12 +54,21 @@ export default buildConfig({
   collections: [Users, Media, Articles, Subscriptions, Categories],
   globals: [Navigation],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret:
+    process.env.PAYLOAD_SECRET ||
+    (() => {
+      throw new Error('PAYLOAD_SECRET is not defined')
+    })(),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: mongooseAdapter({
-    url: process.env.DATABASE_URI || '',
+    url:
+      typeof process.env.DATABASE_URI === 'string'
+        ? process.env.DATABASE_URI
+        : (() => {
+            throw new Error('DATABASE_URI is not defined')
+          })(),
   }),
   sharp,
   plugins,
